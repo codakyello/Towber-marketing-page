@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Towber — Mobile Prototype</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="screens-onboard.jsx"></script>
+<script type="text/babel" src="screens-owner.jsx"></script>
+<script type="text/babel" src="screens-market.jsx"></script>
+<script type="text/babel" src="screens-provider.jsx"></script>
+<script type="text/babel" src="screens-extra.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+const LS = 'towber-state-v2';
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch { return {}; }
+}
+
+const DEFAULT_VEHICLES = [
+  { id: 'v1', make: 'Toyota', model: 'Corolla', year: '2018', colour: 'Pearl white', plate: 'LAG-472-KJA', type: 'Sedan' },
+];
+
+function App() {
+  const saved = loadState();
+  const [dark, setDark] = useState(saved.dark ?? false);
+  const [mode, setMode] = useState(saved.mode || 'owner');
+  const [screen, setScreen] = useState(saved.screen || 'home');
+  const [view, setView] = useState(saved.view || 'canvas'); // canvas | single
+  const [vehicles, setVehicles] = useState(saved.vehicles || DEFAULT_VEHICLES);
+  const [activeVehicleId, setActiveVehicleId] = useState(saved.activeVehicleId || 'v1');
+  const [selectedProvider, setSelectedProvider] = useState(saved.selectedProvider || null);
+  const [showTweaks, setShowTweaks] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(LS, JSON.stringify({ dark, mode, screen, view, vehicles, activeVehicleId, selectedProvider }));
+  }, [dark, mode, screen, view, vehicles, activeVehicleId, selectedProvider]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setShowTweaks(true);
+      if (e.data?.type === '__deactivate_edit_mode') setShowTweaks(false);
+    };
+    window.addEventListener('message', handler);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const addVehicle = (v) => {
+    const id = 'v' + Date.now();
+    setVehicles([...vehicles, { ...v, id }]);
+    setActiveVehicleId(id);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', width: '100%', background: '#E8E8E2', padding: '40px 20px 60px' }}>
+      <TopBar
+        dark={dark} setDark={setDark}
+        mode={mode} setMode={(m) => { setMode(m); setScreen(m === 'owner' ? 'home' : 'home'); }}
+        view={view} setView={setView}
+      />
+
+      {view === 'canvas'
+        ? <CanvasView
+            dark={dark} mode={mode}
+            vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={setActiveVehicleId}
+            addVehicle={addVehicle}
+            selectedProvider={selectedProvider} setSelectedProvider={setSelectedProvider}
+            setDark={setDark}
+          />
+        : <SingleView
+            dark={dark} setDark={setDark}
+            mode={mode} setMode={setMode}
+            screen={screen} setScreen={setScreen}
+            vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={setActiveVehicleId}
+            addVehicle={addVehicle}
+            selectedProvider={selectedProvider} setSelectedProvider={setSelectedProvider}
+          />
+      }
+
+      {showTweaks && (
+        <TweaksPanel
+          dark={dark} setDark={setDark}
+          mode={mode} setMode={(m) => { setMode(m); setScreen('home'); }}
+          view={view} setView={setView}
+        />
+      )}
+    </div>
+  );
+}
+
+function TopBar({ dark, setDark, mode, setMode, view, setView }) {
+  return (
+    <div style={{
+      maxWidth: 1400, margin: '0 auto 24px', display: 'flex', alignItems: 'center', gap: 14,
+    }}>
+      <Logo size={28}/>
+      <div style={{ flex: 1 }}/>
+      <Segmented value={mode} onChange={setMode} options={[['owner','Owner'],['provider','Provider']]}/>
+      <Segmented value={view} onChange={setView} options={[['canvas','Canvas'],['single','Single']]}/>
+      <button onClick={() => setDark(!dark)} style={{
+        padding: '8px 12px', borderRadius: 10, background: '#0A0A0A', color: '#fff',
+        fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+      }}>
+        {dark ? '☀' : '☾'} {dark ? 'Light' : 'Dark'}
+      </button>
+    </div>
+  );
+}
+
+function Segmented({ value, onChange, options }) {
+  return (
+    <div style={{
+      display: 'flex', background: '#fff', borderRadius: 11, padding: 3,
+      border: '1px solid rgba(10,10,10,0.08)',
+    }}>
+      {options.map(([k, l]) => (
+        <button key={k} onClick={() => onChange(k)} style={{
+          padding: '7px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+          background: value === k ? '#0A0A0A' : 'transparent',
+          color: value === k ? '#fff' : '#3A3A38',
+        }}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
+function TweaksPanel({ dark, setDark, mode, setMode, view, setView }) {
+  return (
+    <div style={{
+      position: 'fixed', right: 20, bottom: 20, zIndex: 1000,
+      width: 240, padding: 14, background: '#fff', borderRadius: 14,
+      border: '1px solid rgba(10,10,10,0.1)',
+      boxShadow: '0 20px 50px rgba(10,10,10,0.15)',
+    }}>
+      <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Tweaks</div>
+      {[
+        { label: 'MODE', v: mode, setter: setMode, opts: [['owner','Owner'],['provider','Provider']] },
+        { label: 'THEME', v: dark ? 'dark' : 'light', setter: (s) => setDark(s === 'dark'), opts: [['light','Light'],['dark','Dark']] },
+        { label: 'VIEW', v: view, setter: setView, opts: [['canvas','Canvas'],['single','Single']] },
+      ].map(row => (
+        <div key={row.label} style={{ marginBottom: 10 }}>
+          <div style={{ fontSize: 10, color: '#6B6B68', marginBottom: 5, letterSpacing: 0.5 }} className="mono">{row.label}</div>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {row.opts.map(([k, l]) => (
+              <button key={k} onClick={() => row.setter(k)} style={{
+                flex: 1, padding: 7, borderRadius: 7, fontSize: 11, fontWeight: 600,
+                background: row.v === k ? '#0A0A0A' : '#F0F0EC', color: row.v === k ? '#fff' : '#3A3A38',
+              }}>{l}</button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------- Screen router ----------
+function RenderScreen({ dark, mode, screen, setScreen, setDark, setMode, ctx }) {
+  const {
+    vehicles, activeVehicleId, setActiveVehicleId, addVehicle,
+    selectedProvider, setSelectedProvider,
+  } = ctx;
+  const back = () => setScreen('home');
+
+  if (mode === 'owner') {
+    switch(screen) {
+      case 'welcome': return <OnboardWelcome dark={dark} onPick={(r) => { setMode(r); setScreen(r === 'owner' ? 'auth' : 'kind'); }}/>;
+      case 'auth': return <OnboardAuth dark={dark} role="owner" back={() => setScreen('welcome')} onNext={() => setScreen('otp')}/>;
+      case 'otp': return <OnboardOTP dark={dark} back={() => setScreen('auth')} onNext={() => setScreen('vehicle')}/>;
+      case 'vehicle': return <OnboardVehicle dark={dark} back={() => setScreen('otp')} onNext={(v) => { addVehicle(v); setScreen('home'); }}/>;
+      case 'home': return <OwnerHome dark={dark} setScreen={setScreen}/>;
+      case 'request': return <OwnerRequest dark={dark} setScreen={setScreen} back={() => setScreen('home')} vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={setActiveVehicleId}/>;
+      case 'request-vehicle-pick': return <RequestVehiclePick dark={dark} back={() => setScreen('request')} vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={setActiveVehicleId} setScreen={setScreen}/>;
+      case 'add-vehicle': return <AddVehicleScreen dark={dark} back={() => setScreen('request-vehicle-pick')} onSaved={() => setScreen('request-vehicle-pick')}/>;
+      case 'providers': return <OwnerProviders dark={dark} setScreen={setScreen} back={() => setScreen('request')} setSelectedProvider={setSelectedProvider}/>;
+      case 'negotiate': return <OwnerNegotiate dark={dark} setScreen={setScreen} back={() => setScreen('providers')} selectedProvider={selectedProvider || { id:1, name:'Tunde O.', rating:4.9, jobs:312, truck:'Isuzu flatbed', eta:6, verified:true, service:3500, transport:2200 }}/>;
+      case 'tracking': return <OwnerTracking dark={dark} setScreen={setScreen} back={() => setScreen('home')}/>;
+      case 'chat': return <ChatScreen dark={dark} back={() => setScreen('tracking')}/>;
+      case 'rate': return <RatingScreen dark={dark} setScreen={setScreen} back={() => setScreen('tracking')}/>;
+      case 'market': return <MarketServices dark={dark} setScreen={setScreen}/>;
+      case 'market-parts': return <MarketParts dark={dark} setScreen={setScreen}/>;
+      case 'listing': return <ListingDetail dark={dark} setScreen={setScreen} back={() => setScreen('market')}/>;
+      case 'part': return <PartDetail dark={dark} setScreen={setScreen} back={() => setScreen('market-parts')}/>;
+      case 'activity': return <ActivityScreen dark={dark} setScreen={setScreen}/>;
+      case 'profile': return <ProfileScreen dark={dark} setDark={setDark}/>;
+      case 'splash': return <SplashScreen dark={dark} onDone={() => setScreen('home')} autoAdvance={false}/>;
+      case 'notifications': return <NotificationsScreen dark={dark} mode="owner" setScreen={setScreen} back={() => setScreen('home')}/>;
+      case 'notif-settings': return <NotificationSettingsScreen dark={dark} mode="owner" back={() => setScreen('notifications')}/>;
+      case 'payment': return <PaymentScreen dark={dark} setScreen={setScreen} back={() => setScreen('tracking')} variant="pay"/>;
+      case 'receipt': return <PaymentScreen dark={dark} setScreen={setScreen} back={() => setScreen('home')} variant="receipt"/>;
+      case 'help': return <HelpScreen dark={dark} mode="owner" setScreen={setScreen} back={() => setScreen('profile')}/>;
+      default: return <OwnerHome dark={dark} setScreen={setScreen}/>;
+    }
+  } else {
+    switch(screen) {
+      case 'welcome': return <OnboardWelcome dark={dark} onPick={(r) => { setMode(r); setScreen(r === 'owner' ? 'auth' : 'kind'); }}/>;
+      case 'kind': return <OnboardProviderKind dark={dark} back={() => setScreen('welcome')} onPick={() => setScreen('auth')}/>;
+      case 'auth': return <OnboardAuth dark={dark} role="provider" back={() => setScreen('kind')} onNext={() => setScreen('otp')}/>;
+      case 'otp': return <OnboardOTP dark={dark} back={() => setScreen('auth')} onNext={() => setScreen('provider-vehicle')}/>;
+      case 'provider-vehicle': return <OnboardProviderVehicle dark={dark} back={() => setScreen('otp')} onNext={() => setScreen('home')}/>;
+      case 'home': return <ProviderHome dark={dark} setScreen={setScreen}/>;
+      case 'incoming': return <ProviderIncoming dark={dark} setScreen={setScreen}/>;
+      case 'activejob': return <ProviderActive dark={dark} setScreen={setScreen} back={() => setScreen('home')}/>;
+      case 'earn': return <ProviderEarnings dark={dark} setScreen={setScreen}/>;
+      case 'jobs': return <ActivityScreen dark={dark} setScreen={setScreen}/>;
+      case 'profile': return <ProfileScreen dark={dark} setDark={setDark}/>;
+      case 'splash': return <SplashScreen dark={dark} onDone={() => setScreen('home')} autoAdvance={false}/>;
+      case 'notifications': return <NotificationsScreen dark={dark} mode="provider" setScreen={setScreen} back={() => setScreen('home')}/>;
+      case 'notif-settings': return <NotificationSettingsScreen dark={dark} mode="provider" back={() => setScreen('notifications')}/>;
+      case 'withdraw': return <WithdrawScreen dark={dark} setScreen={setScreen} back={() => setScreen('earn')}/>;
+      case 'bank': return <BankAccountScreen dark={dark} back={() => setScreen('withdraw')}/>;
+      case 'commission': return <CommissionInfoScreen dark={dark} back={() => setScreen('withdraw')}/>;
+      case 'help': return <HelpScreen dark={dark} mode="provider" setScreen={setScreen} back={() => setScreen('profile')}/>;
+      default: return <ProviderHome dark={dark} setScreen={setScreen}/>;
+    }
+  }
+}
+
+function PhoneFrame({ dark, mode, screen, setScreen, setMode, setDark, ctx, label }) {
+  const showTabBar = mode === 'owner'
+    ? ['home','market','market-parts','activity','profile'].includes(screen)
+    : ['home','earn','profile','jobs'].includes(screen);
+
+  const tabFor = (() => {
+    if (mode === 'owner') {
+      if (['market','market-parts','listing','part'].includes(screen)) return 'market';
+      return screen;
+    } else {
+      if (['incoming','activejob'].includes(screen)) return 'home';
+      return screen;
+    }
+  })();
+
+  return (
+    <Phone dark={dark} label={label}>
+      <div style={{ position: 'relative', height: '100%' }}>
+        <div style={{ position: 'absolute', inset: 0, bottom: showTabBar ? 76 : 0, overflow: 'auto' }} className="screen">
+          <RenderScreen dark={dark} mode={mode} screen={screen} setScreen={setScreen} setDark={setDark} setMode={setMode} ctx={ctx}/>
+        </div>
+        {showTabBar && (
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50 }}>
+            {mode === 'owner'
+              ? <TabBar active={tabFor} onTab={setScreen} dark={dark}/>
+              : <ProviderTabBar active={tabFor} onTab={setScreen}/>}
+          </div>
+        )}
+      </div>
+    </Phone>
+  );
+}
+
+function SingleView({ dark, setDark, mode, setMode, screen, setScreen, ...rest }) {
+  const ctx = { ...rest };
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div className="mono" style={{ fontSize: 11, color: '#6B6B68', fontWeight: 600, letterSpacing: 0.5 }}>
+              {dark ? 'DARK' : 'LIGHT'}
+            </div>
+            <PhoneFrame dark={dark} mode={mode} screen={screen} setScreen={setScreen} setMode={setMode} setDark={setDark} ctx={ctx} label={`${mode}/${screen}`}/>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+            <div className="mono" style={{ fontSize: 11, color: '#6B6B68', fontWeight: 600, letterSpacing: 0.5 }}>
+              {!dark ? 'DARK' : 'LIGHT'}
+            </div>
+            <PhoneFrame dark={!dark} mode={mode} screen={screen} setScreen={setScreen} setMode={setMode} setDark={setDark} ctx={ctx} label={`${mode}/${screen}-mirror`}/>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CanvasView({ dark, mode, setDark, ...rest }) {
+  const ctx = { ...rest };
+  const ownerFlow = [
+    { s: 'splash', title: '00 Splash', section: 'Onboarding' },
+    { s: 'welcome', title: '01 Welcome', section: 'Onboarding' },
+    { s: 'auth', title: '02 Create account', section: 'Onboarding' },
+    { s: 'otp', title: '03 Verify phone', section: 'Onboarding' },
+    { s: 'vehicle', title: '04 Add vehicle', section: 'Onboarding' },
+    { s: 'home', title: '05 Owner home', section: 'Core flow' },
+    { s: 'request', title: '06 Request (service + vehicle)', section: 'Core flow' },
+    { s: 'request-vehicle-pick', title: '07 Pick vehicle', section: 'Core flow' },
+    { s: 'providers', title: '08 Providers nearby', section: 'Core flow' },
+    { s: 'negotiate', title: '09 Review & negotiate', section: 'Core flow', highlight: true },
+    { s: 'tracking', title: '10 Live tracking', section: 'Core flow' },
+    { s: 'chat', title: '11 In-app chat', section: 'Core flow' },
+    { s: 'payment', title: '12 Payment', section: 'Core flow' },
+    { s: 'receipt', title: '13 Receipt', section: 'Core flow' },
+    { s: 'rate', title: '14 Rate provider', section: 'Core flow' },
+    { s: 'add-vehicle', title: '15 Add another vehicle', section: 'Account' },
+    { s: 'market', title: '16 Services marketplace', section: 'Marketplace' },
+    { s: 'listing', title: '17 Service listing', section: 'Marketplace' },
+    { s: 'market-parts', title: '18 Spare parts', section: 'Marketplace' },
+    { s: 'part', title: '19 Part detail', section: 'Marketplace' },
+    { s: 'activity', title: '20 Activity', section: 'Account' },
+    { s: 'notifications', title: '21 Notifications', section: 'Account' },
+    { s: 'notif-settings', title: '22 Notification settings', section: 'Account' },
+    { s: 'profile', title: '23 Profile + settings', section: 'Account' },
+    { s: 'help', title: '24 Help & support', section: 'Account' },
+  ];
+  const providerFlow = [
+    { s: 'splash', title: '00 Splash', section: 'Provider onboarding' },
+    { s: 'welcome', title: '01 Welcome', section: 'Provider onboarding' },
+    { s: 'kind', title: '02 Choose path', section: 'Provider onboarding' },
+    { s: 'auth', title: '03 Create account', section: 'Provider onboarding' },
+    { s: 'otp', title: '04 Verify phone', section: 'Provider onboarding' },
+    { s: 'provider-vehicle', title: '05 Vehicle & service', section: 'Provider onboarding' },
+    { s: 'home', title: '06 Dispatch home', section: 'Provider' },
+    { s: 'incoming', title: '07 Incoming job', section: 'Provider', highlight: true },
+    { s: 'activejob', title: '08 Active job', section: 'Provider' },
+    { s: 'earn', title: '09 Earnings', section: 'Provider' },
+    { s: 'withdraw', title: '10 Withdraw', section: 'Provider', highlight: true },
+    { s: 'bank', title: '11 Bank account', section: 'Provider' },
+    { s: 'commission', title: '12 Commission', section: 'Provider' },
+    { s: 'notifications', title: '13 Notifications', section: 'Provider' },
+    { s: 'profile', title: '14 Profile', section: 'Provider' },
+    { s: 'help', title: '15 Help & support', section: 'Provider' },
+  ];
+  const flow = mode === 'owner' ? ownerFlow : providerFlow;
+
+  const sections = {};
+  flow.forEach(f => { (sections[f.section] = sections[f.section] || []).push(f); });
+
+  return (
+    <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
+      {Object.entries(sections).map(([sec, items]) => (
+        <div key={sec}>
+          <div style={{ fontSize: 11, color: '#6B6B68', marginBottom: 14, letterSpacing: 0.6, fontWeight: 700 }} className="mono">
+            {sec.toUpperCase()}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 406px)', gap: 24, justifyContent: 'flex-start' }}>
+            {items.map(item => (
+              <FrameCard key={item.s} item={item} dark={dark} mode={mode} ctx={ctx} setDark={setDark}/>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function FrameCard({ item, dark, mode, ctx, setDark }) {
+  const [d, setD] = useState(dark);
+  useEffect(() => setD(dark), [dark]);
+  const [localScreen, setLocalScreen] = useState(item.s);
+  useEffect(() => setLocalScreen(item.s), [item.s]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: -0.2, color: '#0A0A0A' }}>
+          {item.title}
+        </div>
+        {item.highlight && (
+          <div style={{
+            background: '#C4F542', color: '#0A0A0A', fontSize: 9, fontWeight: 700,
+            padding: '2px 6px', borderRadius: 4, letterSpacing: 0.5,
+          }} className="mono">KEY</div>
+        )}
+        <div style={{ flex: 1 }}/>
+        <button onClick={() => setD(!d)} style={{
+          fontSize: 10, color: '#6B6B68', fontWeight: 600,
+          padding: '3px 7px', borderRadius: 5, background: '#fff',
+          border: '1px solid rgba(10,10,10,0.1)',
+        }} className="mono">{d ? '☀' : '☾'}</button>
+      </div>
+      <PhoneFrame dark={d} mode={mode} screen={localScreen} setScreen={setLocalScreen} setMode={() => {}} setDark={setDark} ctx={ctx} label={`${mode}/${item.s}`}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+</body>
+</html>

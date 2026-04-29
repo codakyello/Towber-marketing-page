@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Towber — Print</title>
+<link rel="stylesheet" href="styles.css"/>
+<style>
+  @page { size: A3 landscape; margin: 12mm; }
+  html, body { background: #E8E8E2; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; }
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    padding: 24px 28px;
+    box-sizing: border-box;
+  }
+  .print-page:last-child { page-break-after: auto; }
+  .print-page-title {
+    font-size: 11px; letter-spacing: 0.6px; font-weight: 700;
+    color: #0A0A0A; margin-bottom: 18px; font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .print-page-title .sub { color: #6B6B68; margin-left: 10px; font-weight: 500; }
+  .print-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px 24px;
+    justify-items: center;
+  }
+  .frame-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .frame-label {
+    font-size: 11px; font-weight: 700; color: #0A0A0A; letter-spacing: -0.1px;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+  .frame-label .key {
+    display: inline-block;
+    background: #C4F542; color: #0A0A0A; font-size: 8px; font-weight: 700;
+    padding: 2px 5px; border-radius: 3px; letter-spacing: 0.4px;
+    margin-left: 6px; vertical-align: middle;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  .cover {
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 90vh; padding: 40px 80px;
+  }
+  .cover .mark { font-size: 120px; font-weight: 800; letter-spacing: -6px; color: #0A0A0A; line-height: 1; }
+  .cover .mark em { font-style: normal; color: #C4F542; background: #0A0A0A; padding: 0 10px; border-radius: 12px; }
+  .cover .tag { font-size: 18px; color: #3A3A38; margin-top: 18px; max-width: 700px; line-height: 1.5; }
+  .cover .meta { margin-top: 60px; font-size: 11px; letter-spacing: 0.5px; color: #6B6B68; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .cover .flow-list {
+    margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 40px; max-width: 800px;
+    font-size: 13px; color: #3A3A38;
+  }
+  .cover .flow-list .label { font-size: 10px; color: #6B6B68; font-weight: 700; letter-spacing: 0.5px; font-family: 'JetBrains Mono', ui-monospace, monospace; margin-bottom: 6px; }
+  .cover .flow-list .col > div + div { padding-top: 4px; }
+
+  @media print {
+    html, body { background: #E8E8E2 !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shell.jsx"></script>
+<script type="text/babel" src="screens-onboard.jsx"></script>
+<script type="text/babel" src="screens-owner.jsx"></script>
+<script type="text/babel" src="screens-market.jsx"></script>
+<script type="text/babel" src="screens-provider.jsx"></script>
+<script type="text/babel" src="screens-extra.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const DEFAULT_VEHICLES = [
+  { id: 'v1', make: 'Toyota', model: 'Corolla', year: '2018', colour: 'Pearl white', plate: 'LAG-472-KJA', type: 'Sedan' },
+];
+
+// Mirror the router from Towber.html
+function RenderScreen({ dark, mode, screen, ctx }) {
+  const noop = () => {};
+  const setScreen = noop, setMode = noop, setDark = noop;
+  const {
+    vehicles, activeVehicleId, setActiveVehicleId, addVehicle,
+    selectedProvider, setSelectedProvider,
+  } = ctx;
+
+  if (mode === 'owner') {
+    switch(screen) {
+      case 'welcome': return <OnboardWelcome dark={dark} onPick={noop}/>;
+      case 'auth': return <OnboardAuth dark={dark} role="owner" back={noop} onNext={noop}/>;
+      case 'otp': return <OnboardOTP dark={dark} back={noop} onNext={noop}/>;
+      case 'vehicle': return <OnboardVehicle dark={dark} back={noop} onNext={noop}/>;
+      case 'home': return <OwnerHome dark={dark} setScreen={noop}/>;
+      case 'request': return <OwnerRequest dark={dark} setScreen={noop} back={noop} vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={noop}/>;
+      case 'request-vehicle-pick': return <RequestVehiclePick dark={dark} back={noop} vehicles={vehicles} activeVehicleId={activeVehicleId} setActiveVehicleId={noop} setScreen={noop}/>;
+      case 'add-vehicle': return <AddVehicleScreen dark={dark} back={noop} onSaved={noop}/>;
+      case 'providers': return <OwnerProviders dark={dark} setScreen={noop} back={noop} setSelectedProvider={noop}/>;
+      case 'negotiate': return <OwnerNegotiate dark={dark} setScreen={noop} back={noop} selectedProvider={{ id:1, name:'Tunde O.', rating:4.9, jobs:312, truck:'Isuzu flatbed', eta:6, verified:true, service:3500, transport:2200 }}/>;
+      case 'tracking': return <OwnerTracking dark={dark} setScreen={noop} back={noop}/>;
+      case 'chat': return <ChatScreen dark={dark} back={noop}/>;
+      case 'rate': return <RatingScreen dark={dark} setScreen={noop} back={noop}/>;
+      case 'market': return <MarketServices dark={dark} setScreen={noop}/>;
+      case 'market-parts': return <MarketParts dark={dark} setScreen={noop}/>;
+      case 'listing': return <ListingDetail dark={dark} setScreen={noop} back={noop}/>;
+      case 'part': return <PartDetail dark={dark} setScreen={noop} back={noop}/>;
+      case 'activity': return <ActivityScreen dark={dark} setScreen={noop}/>;
+      case 'profile': return <ProfileScreen dark={dark} setDark={noop}/>;
+      case 'splash': return <SplashScreen dark={dark} onDone={noop} autoAdvance={false}/>;
+      case 'notifications': return <NotificationsScreen dark={dark} mode="owner" setScreen={noop} back={noop}/>;
+      case 'notif-settings': return <NotificationSettingsScreen dark={dark} mode="owner" back={noop}/>;
+      case 'payment': return <PaymentScreen dark={dark} setScreen={noop} back={noop} variant="pay"/>;
+      case 'receipt': return <PaymentScreen dark={dark} setScreen={noop} back={noop} variant="receipt"/>;
+      case 'help': return <HelpScreen dark={dark} mode="owner" setScreen={noop} back={noop}/>;
+      default: return <OwnerHome dark={dark} setScreen={noop}/>;
+    }
+  } else {
+    switch(screen) {
+      case 'welcome': return <OnboardWelcome dark={dark} onPick={noop}/>;
+      case 'kind': return <OnboardProviderKind dark={dark} back={noop} onPick={noop}/>;
+      case 'auth': return <OnboardAuth dark={dark} role="provider" back={noop} onNext={noop}/>;
+      case 'otp': return <OnboardOTP dark={dark} back={noop} onNext={noop}/>;
+      case 'provider-vehicle': return <OnboardProviderVehicle dark={dark} back={noop} onNext={noop}/>;
+      case 'home': return <ProviderHome dark={dark} setScreen={noop}/>;
+      case 'incoming': return <ProviderIncoming dark={dark} setScreen={noop}/>;
+      case 'activejob': return <ProviderActive dark={dark} setScreen={noop} back={noop}/>;
+      case 'earn': return <ProviderEarnings dark={dark} setScreen={noop}/>;
+      case 'jobs': return <ActivityScreen dark={dark} setScreen={noop}/>;
+      case 'profile': return <ProfileScreen dark={dark} setDark={noop}/>;
+      case 'splash': return <SplashScreen dark={dark} onDone={noop} autoAdvance={false}/>;
+      case 'notifications': return <NotificationsScreen dark={dark} mode="provider" setScreen={noop} back={noop}/>;
+      case 'notif-settings': return <NotificationSettingsScreen dark={dark} mode="provider" back={noop}/>;
+      case 'withdraw': return <WithdrawScreen dark={dark} setScreen={noop} back={noop}/>;
+      case 'bank': return <BankAccountScreen dark={dark} back={noop}/>;
+      case 'commission': return <CommissionInfoScreen dark={dark} back={noop}/>;
+      case 'help': return <HelpScreen dark={dark} mode="provider" setScreen={noop} back={noop}/>;
+      default: return <ProviderHome dark={dark} setScreen={noop}/>;
+    }
+  }
+}
+
+function PrintPhone({ dark, mode, screen, ctx, label }) {
+  const showTabBar = mode === 'owner'
+    ? ['home','market','market-parts','activity','profile'].includes(screen)
+    : ['home','earn','profile','jobs'].includes(screen);
+
+  const tabFor = (() => {
+    if (mode === 'owner') {
+      if (['market','market-parts','listing','part'].includes(screen)) return 'market';
+      return screen;
+    } else {
+      if (['incoming','activejob'].includes(screen)) return 'home';
+      return screen;
+    }
+  })();
+
+  return (
+    <Phone dark={dark} label={label}>
+      <div style={{ position: 'relative', height: '100%' }}>
+        <div style={{ position: 'absolute', inset: 0, bottom: showTabBar ? 76 : 0, overflow: 'hidden' }} className="screen">
+          <RenderScreen dark={dark} mode={mode} screen={screen} ctx={ctx}/>
+        </div>
+        {showTabBar && (
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 50 }}>
+            {mode === 'owner'
+              ? <TabBar active={tabFor} onTab={() => {}} dark={dark}/>
+              : <ProviderTabBar active={tabFor} onTab={() => {}}/>}
+          </div>
+        )}
+      </div>
+    </Phone>
+  );
+}
+
+function FrameCard({ item, mode, ctx }) {
+  return (
+    <div className="frame-wrap">
+      <div className="frame-label">
+        {item.title}
+        {item.highlight && <span className="key">KEY</span>}
+      </div>
+      <PrintPhone dark={false} mode={mode} screen={item.s} ctx={ctx} label={`${mode}/${item.s}`}/>
+    </div>
+  );
+}
+
+const ownerFlow = [
+  { s: 'splash', title: '00 Splash', section: 'Onboarding' },
+  { s: 'welcome', title: '01 Welcome', section: 'Onboarding' },
+  { s: 'auth', title: '02 Create account', section: 'Onboarding' },
+  { s: 'otp', title: '03 Verify phone', section: 'Onboarding' },
+  { s: 'vehicle', title: '04 Add vehicle', section: 'Onboarding' },
+  { s: 'home', title: '05 Owner home', section: 'Core flow' },
+  { s: 'request', title: '06 Request service', section: 'Core flow' },
+  { s: 'request-vehicle-pick', title: '07 Pick vehicle', section: 'Core flow' },
+  { s: 'providers', title: '08 Providers nearby', section: 'Core flow' },
+  { s: 'negotiate', title: '09 Review & negotiate', section: 'Core flow', highlight: true },
+  { s: 'tracking', title: '10 Live tracking', section: 'Core flow' },
+  { s: 'chat', title: '11 In-app chat', section: 'Core flow' },
+  { s: 'payment', title: '12 Payment', section: 'Core flow' },
+  { s: 'receipt', title: '13 Receipt', section: 'Core flow' },
+  { s: 'rate', title: '14 Rate provider', section: 'Core flow' },
+  { s: 'add-vehicle', title: '15 Add another vehicle', section: 'Account' },
+  { s: 'market', title: '16 Services marketplace', section: 'Marketplace' },
+  { s: 'listing', title: '17 Service listing', section: 'Marketplace' },
+  { s: 'market-parts', title: '18 Spare parts', section: 'Marketplace' },
+  { s: 'part', title: '19 Part detail', section: 'Marketplace' },
+  { s: 'activity', title: '20 Activity', section: 'Account' },
+  { s: 'notifications', title: '21 Notifications', section: 'Account' },
+  { s: 'notif-settings', title: '22 Notification settings', section: 'Account' },
+  { s: 'profile', title: '23 Profile + settings', section: 'Account' },
+  { s: 'help', title: '24 Help & support', section: 'Account' },
+];
+const providerFlow = [
+  { s: 'splash', title: '00 Splash', section: 'Provider onboarding' },
+  { s: 'welcome', title: '01 Welcome', section: 'Provider onboarding' },
+  { s: 'kind', title: '02 Choose path', section: 'Provider onboarding' },
+  { s: 'auth', title: '03 Create account', section: 'Provider onboarding' },
+  { s: 'otp', title: '04 Verify phone', section: 'Provider onboarding' },
+  { s: 'provider-vehicle', title: '05 Vehicle & service', section: 'Provider onboarding' },
+  { s: 'home', title: '06 Dispatch home', section: 'Provider' },
+  { s: 'incoming', title: '07 Incoming job', section: 'Provider', highlight: true },
+  { s: 'activejob', title: '08 Active job', section: 'Provider' },
+  { s: 'earn', title: '09 Earnings', section: 'Provider' },
+  { s: 'withdraw', title: '10 Withdraw', section: 'Provider', highlight: true },
+  { s: 'bank', title: '11 Bank account', section: 'Provider' },
+  { s: 'commission', title: '12 Commission', section: 'Provider' },
+  { s: 'notifications', title: '13 Notifications', section: 'Provider' },
+  { s: 'profile', title: '14 Profile', section: 'Provider' },
+  { s: 'help', title: '15 Help & support', section: 'Provider' },
+];
+
+function chunk(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+function Cover() {
+  return (
+    <div className="print-page cover">
+      <div className="mark">Tow<em>ber</em>.</div>
+      <div className="tag">
+        On-demand roadside assistance &amp; automotive marketplace for Lagos.
+        A marketplace model where owners compare verified providers — price, rating, distance, truck type — and pick.
+      </div>
+      <div className="flow-list">
+        <div className="col">
+          <div className="label">OWNER FLOW · 25 SCREENS</div>
+          {ownerFlow.map(f => <div key={f.s}>{f.title}</div>)}
+        </div>
+        <div className="col">
+          <div className="label">PROVIDER FLOW · 16 SCREENS</div>
+          {providerFlow.map(f => <div key={f.s}>{f.title}</div>)}
+        </div>
+      </div>
+      <div className="meta">TOWBER · HI-FI PROTOTYPE · 41 SCREENS · LAGOS</div>
+    </div>
+  );
+}
+
+function FlowPages({ flow, mode, ctx, sectionTitle }) {
+  // Group by section, then chunk each section to 6 frames per page
+  const sections = {};
+  flow.forEach(f => { (sections[f.section] = sections[f.section] || []).push(f); });
+
+  const pages = [];
+  let pageNum = 1;
+  Object.entries(sections).forEach(([sec, items]) => {
+    const pagesForSec = chunk(items, 6);
+    pagesForSec.forEach((pageItems, i) => {
+      pages.push(
+        <div className="print-page" key={`${sec}-${i}`}>
+          <div className="print-page-title">
+            {sectionTitle.toUpperCase()} / {sec.toUpperCase()}
+            <span className="sub">{pagesForSec.length > 1 ? `${i+1} of ${pagesForSec.length}` : ''}</span>
+          </div>
+          <div className="print-grid">
+            {pageItems.map(item => <FrameCard key={item.s} item={item} mode={mode} ctx={ctx}/>)}
+          </div>
+        </div>
+      );
+      pageNum++;
+    });
+  });
+  return pages;
+}
+
+function App() {
+  const [vehicles] = useState(DEFAULT_VEHICLES);
+  const [activeVehicleId] = useState('v1');
+  const [selectedProvider] = useState(null);
+  const ctx = {
+    vehicles, activeVehicleId, setActiveVehicleId: () => {}, addVehicle: () => {},
+    selectedProvider, setSelectedProvider: () => {},
+  };
+
+  return (
+    <div>
+      <Cover/>
+      <FlowPages flow={ownerFlow} mode="owner" ctx={ctx} sectionTitle="Owner"/>
+      <FlowPages flow={providerFlow} mode="provider" ctx={ctx} sectionTitle="Provider"/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+
+// Auto-print after fonts + render
+(async () => {
+  try { await document.fonts?.ready; } catch {}
+  await new Promise(r => setTimeout(r, 2500));
+  window.print();
+})();
+</script>
+</body>
+</html>

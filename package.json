@@ -1,0 +1,15 @@
+{
+  "name": "towber-landing-next",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start"
+  },
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
+}

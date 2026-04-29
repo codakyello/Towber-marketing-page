@@ -1,0 +1,68 @@
+// Line icons — 1.75 stroke, rounded caps. All take size + color.
+const Icon = ({ children, size = 22, color = 'currentColor', style }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"
+    style={style}>{children}</svg>
+);
+
+const I = {
+  home: (p) => <Icon {...p}><path d="M3 11l9-7 9 7v9a2 2 0 01-2 2h-4v-6h-6v6H5a2 2 0 01-2-2z"/></Icon>,
+  grid: (p) => <Icon {...p}><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></Icon>,
+  list: (p) => <Icon {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></Icon>,
+  user: (p) => <Icon {...p}><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></Icon>,
+  chat: (p) => <Icon {...p}><path d="M21 12c0 4.4-4 8-9 8-1.5 0-3-.3-4.3-.9L3 21l1.2-4.3C3.4 15.3 3 13.7 3 12c0-4.4 4-8 9-8s9 3.6 9 8z"/></Icon>,
+  bell: (p) => <Icon {...p}><path d="M18 16v-5a6 6 0 10-12 0v5l-2 3h16z"/><path d="M10 20a2 2 0 004 0"/></Icon>,
+  search: (p) => <Icon {...p}><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></Icon>,
+  chevron: (p) => <Icon {...p}><path d="M9 6l6 6-6 6"/></Icon>,
+  chevronL: (p) => <Icon {...p}><path d="M15 6l-6 6 6 6"/></Icon>,
+  chevronD: (p) => <Icon {...p}><path d="M6 9l6 6 6-6"/></Icon>,
+  close: (p) => <Icon {...p}><path d="M6 6l12 12M18 6L6 18"/></Icon>,
+  plus: (p) => <Icon {...p}><path d="M12 5v14M5 12h14"/></Icon>,
+  minus: (p) => <Icon {...p}><path d="M5 12h14"/></Icon>,
+  check: (p) => <Icon {...p}><path d="M5 12l5 5L20 7"/></Icon>,
+  location: (p) => <Icon {...p}><path d="M12 22s8-7 8-13a8 8 0 10-16 0c0 6 8 13 8 13z"/><circle cx="12" cy="9" r="3"/></Icon>,
+  nav: (p) => <Icon {...p}><path d="M12 3l9 18-9-4-9 4z"/></Icon>,
+  phone: (p) => <Icon {...p}><path d="M22 17v3a2 2 0 01-2 2A18 18 0 012 4a2 2 0 012-2h3a2 2 0 012 2c0 1.3.2 2.5.6 3.6a2 2 0 01-.4 2.1L8 11a16 16 0 006 6l1.3-1.3a2 2 0 012-.4c1.2.4 2.4.6 3.6.6a2 2 0 012 2z"/></Icon>,
+  car: (p) => <Icon {...p}><path d="M5 17h14M5 17l-2-6h18l-2 6M5 17v3h2v-3M19 17v3h-2v-3M7 11l2-5h6l2 5"/><circle cx="8" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></Icon>,
+  tow: (p) => <Icon {...p}><path d="M2 17h3v-4h7V8h4l3 5h3v4"/><circle cx="7" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/></Icon>,
+  tire: (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></Icon>,
+  battery: (p) => <Icon {...p}><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 10v4M7 10v4M11 10v4M15 10v4"/></Icon>,
+  fuel: (p) => <Icon {...p}><path d="M4 22V4a2 2 0 012-2h7a2 2 0 012 2v18M4 22h11M15 10h2a2 2 0 012 2v4a2 2 0 002 2h0a2 2 0 002-2V8l-3-3"/></Icon>,
+  key: (p) => <Icon {...p}><circle cx="8" cy="14" r="4"/><path d="M11 12l10-10M16 7l2 2"/></Icon>,
+  wrench: (p) => <Icon {...p}><path d="M14 6a4 4 0 00-4 4c0 .5.1 1 .3 1.5L3 19l2 2 7.5-7.3c.5.2 1 .3 1.5.3a4 4 0 004-4c0-.8-.3-1.6-.8-2.2l-2 2-2-2 2-2A4 4 0 0014 6z"/></Icon>,
+  star: (p) => <Icon {...p}><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></Icon>,
+  starFill: ({ size=22, color='currentColor', ...p}) => <svg width={size} height={size} viewBox="0 0 24 24" fill={color} {...p}><path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>,
+  shield: (p) => <Icon {...p}><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></Icon>,
+  clock: (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></Icon>,
+  wallet: (p) => <Icon {...p}><path d="M3 7h16a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M3 7V5a2 2 0 012-2h12"/><circle cx="17" cy="13.5" r="1"/></Icon>,
+  card: (p) => <Icon {...p}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></Icon>,
+  settings: (p) => <Icon {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></Icon>,
+  logout: (p) => <Icon {...p}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></Icon>,
+  filter: (p) => <Icon {...p}><path d="M3 6h18M6 12h12M10 18h4"/></Icon>,
+  sparkle: (p) => <Icon {...p}><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></Icon>,
+  arrowUp: (p) => <Icon {...p}><path d="M12 19V5M5 12l7-7 7 7"/></Icon>,
+  arrowRight: (p) => <Icon {...p}><path d="M5 12h14M13 5l7 7-7 7"/></Icon>,
+  bolt: (p) => <Icon {...p}><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></Icon>,
+  truck: (p) => <Icon {...p}><path d="M1 6h13v10H1zM14 10h4l3 3v3h-7"/><circle cx="5.5" cy="17.5" r="1.5"/><circle cx="17.5" cy="17.5" r="1.5"/></Icon>,
+  cart: (p) => <Icon {...p}><circle cx="9" cy="20" r="1"/><circle cx="17" cy="20" r="1"/><path d="M2 3h3l2.5 12h11l2-8H6"/></Icon>,
+  pkg: (p) => <Icon {...p}><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></Icon>,
+  dot: ({size=8,color='currentColor'}) => <svg width={size} height={size} viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill={color}/></svg>,
+  badge: (p) => <Icon {...p}><path d="M12 2l2.4 3.6L18 4l.4 4 4 .4L20 12l2.4 3.6L18 16l-.4 4-3.6-1.6L12 22l-2.4-3.6L6 20l-.4-4L2 15.6 4 12 1.6 8.4 6 8l-.4-4L9.6 5.6z"/><path d="M9 12l2 2 4-4"/></Icon>,
+  circle: (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/></Icon>,
+  power: (p) => <Icon {...p}><path d="M12 2v10M5.6 7a8 8 0 1012.8 0"/></Icon>,
+  trendUp: (p) => <Icon {...p}><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></Icon>,
+  info: (p) => <Icon {...p}><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/></Icon>,
+  moon: (p) => <Icon {...p}><path d="M21 13A9 9 0 1111 3a7 7 0 0010 10z"/></Icon>,
+  sun: (p) => <Icon {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></Icon>,
+  message: (p) => <Icon {...p}><path d="M21 12a8 8 0 01-12 6.9L3 20l1.1-4.3A8 8 0 1121 12z"/></Icon>,
+  image: (p) => <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></Icon>,
+  receipt: (p) => <Icon {...p}><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2V2z"/><path d="M8 6h8M8 10h8M8 14h5"/></Icon>,
+  mic: (p) => <Icon {...p}><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></Icon>,
+  attach: (p) => <Icon {...p}><path d="M21 11l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8"/></Icon>,
+  send: (p) => <Icon {...p}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></Icon>,
+  haggle: (p) => <Icon {...p}><path d="M3 12l3-3 3 3M21 12l-3 3-3-3M3 12h6M21 12h-6"/><circle cx="12" cy="12" r="3"/></Icon>,
+  camera: (p) => <Icon {...p}><path d="M3 7h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13" r="4"/></Icon>,
+};
+
+window.I = I;
+window.Icon = Icon;
